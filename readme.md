@@ -147,6 +147,12 @@ The simplest model beat both ensembles, on cross-validation *and* on the test se
 
 This is explainable from how the data was generated. If `admission_probability` was constructed as a broadly additive function of the features, the true relationship is close to linear, which is exactly what logistic regression assumes. Gradient boosting and random forest have the capacity to model complex feature interactions, but there are none here, so that capacity fits noise instead. Random forest — the most flexible model — scored worst, which is consistent with that explanation.
 
+### Hyperparameter tuning
+
+`RandomizedSearchCV` over 15 configurations (regularisation strength `C` from 0.001 to 100, and class weighting) improved cross-validated AUC from 0.6786 to 0.6810 — a gain of **+0.0024**, which falls below the 0.005 noise margin used by the promotion gate. Test AUC moved from 0.6953 to 0.6959.
+
+The search selected `C = 0.001`, the strongest regularisation in the range, indicating the model performs best when heavily constrained. This is consistent with the earlier finding that the underlying relationship is close to linear, and with the conclusion that the model had already reached the dataset's measured ceiling of ~0.685.
+
 ---
 
 ## Why this model is considered good
@@ -155,9 +161,7 @@ This is explainable from how the data was generated. If `admission_probability` 
 2. **It is at the theoretical ceiling** — 0.6953 against a measured maximum of ~0.685. The remaining error is irreducible label noise, not model weakness.
 3. **It generalises consistently** — cross-validation (0.6786) and test (0.6953) are close, indicating no overfitting.
 4. **It uses no leaked features** — every input is available at genuine prediction time.
-5. **It fits the actual use case** — the model outputs ranked probabilities rather than
-   hard decisions, which is what an admissions process needs for prioritising applicants.
-   (Calibration itself has not been verified — see Next steps.)
+5. **It fits the actual use case** — the model outputs ranked probabilities rather than hard decisions, which is what an admissions process needs for prioritising applicants. (Calibration itself has not been verified — see Next steps.)
 
 A higher number was available by retaining the leaked columns. It would have been meaningless.
 
@@ -262,6 +266,7 @@ college-admission-mlflow/
 │   ├── config.py                 # All settings in one place
 │   ├── data.py                   # Loading and stratified splitting
 │   ├── train.py                  # Pipeline construction, 4-model comparison
+│   ├── tune.py                   # Hyperparameter search (RandomizedSearchCV)
 │   ├── register.py               # Register champion, set @champion alias
 │   ├── improve.py                # Challenger with engineered features
 │   ├── promote.py                # Gated automatic promotion
@@ -290,6 +295,7 @@ mlflow server --host 127.0.0.1 --port 5000
 # Terminal 2 — train and register
 cd src
 python train.py                    # compare four models
+python tune.py                     # hyperparameter search
 python register.py                 # register champion, set alias
 
 # Terminal 3 — serve
