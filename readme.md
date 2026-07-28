@@ -192,7 +192,7 @@ Every run logs parameters, five metrics, a confusion matrix artifact, and the fu
 
 The champion is registered as a named, versioned model with an alias.
 
-![Model registry](screenshots/06_model_registry.png)
+![Model registry](screenshots/06_registered_model_v1.png)
 
 *The registry after promotion: `@champion` points at version 4.*
 
